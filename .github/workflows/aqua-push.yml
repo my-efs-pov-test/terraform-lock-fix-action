@@ -10,7 +10,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
       - name: Run Aqua scanner
         uses: docker://aquasec/aqua-scanner
         with:
@@ -22,7 +27,7 @@ jobs:
           AQUA_KEY: ${{ secrets.AQUA_KEY }}
           AQUA_SECRET: ${{ secrets.AQUA_SECRET }}
           TRIVY_RUN_AS_PLUGIN: 'aqua'
-          - name: Manifest Generation
+      - name: Manifest Generation
         run: |
           export BILLY_SERVER=https://billy.codesec.aquasec.com
           curl -sLo install.sh download.codesec.aquasec.com/billy/install.sh
