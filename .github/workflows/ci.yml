@@ -1,0 +1,38 @@
+name: ci
+on:
+  push:
+    branches:
+      - '**'
+      - '!master'
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        renovate_email:
+          - bot@renovateapp.com
+          - 29139614+renovate[bot]@users.noreply.github.com
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: prepare test data
+        run: |
+          sed 's/4\.7\.0/4.8.0/' -i test/versions.tf
+          git add test/versions.tf
+          git config user.name "Dummy"
+          git config user.email "${{ matrix.renovate_email }}"
+          git commit -m "Test"
+      - name: run
+        uses: ./
+        with:
+          git_user: Dummy
+          git_email: 8390204+seqsense@users.noreply.github.com
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          push: no
+      - name: validate
+        run: |
+          grep 'version     = "4.8.0"' test/.terraform.lock.hcl
+          grep 'constraints = "4.8.0"' test/.terraform.lock.hcl
+          ! grep 'version     = "4.7.0"' test/.terraform.lock.hcl
+          ! grep 'constraints = "4.7.0"' test/.terraform.lock.hcl
